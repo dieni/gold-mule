@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  gold-mule:
+    build: ./docker/
+    container_name: gold-mule
+    env_file:
+      - ./docker/.env
+    working_dir: /gold-mule/
+    volumes: 
+      - ./app/:/gold-mule/
+    # command: python /gold-mule/src/get-historical-data_01.py
+    tty: true
