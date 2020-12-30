@@ -1,6 +1,6 @@
-python-socketio==4.6.1
-numpy==1.19.3
-pandas>=1.1.4
-fxcmpy>=1.2.6
-tensorflow==2.4.0
-attrs==20.3.0
+# python-socketio==4.6.1
+# numpy==1.19.3
+# pandas>=1.1.4
+# fxcmpy>=1.2.6
+tensorflow>=2
+# attrs==20.3.0
