@@ -3,6 +3,7 @@ import fxcmpy
 import pandas
 import time
 from utils import time_convert
+from predict import predict_cryptomajor_delta
 
 PERIOD = 'm15'
 ROWS = 2
@@ -17,6 +18,7 @@ print('FETCH INSTRUMENTS...')
 assets = con.get_instruments_for_candles()
 print(time_convert(time.time() - start_time))
 
+# assets = ['BTC/USD','']
 
 # XXX: Get historical data
 last_interval = pandas.DataFrame()
