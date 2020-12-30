@@ -2,7 +2,7 @@ FROM tensorflow/tensorflow:2.4.0
 
 COPY ./requirements.txt /home/requirements.txt
 
-RUN apt-get update && apt-get upgrade -y
+# RUN apt-get update && apt-get upgrade -y
 # RUN apk update && apk upgrade
 
 # INSTALL REQUIREMENTS FOR INSTALLING REQUIREMENTS

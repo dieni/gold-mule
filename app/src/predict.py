@@ -1,10 +1,11 @@
 import time
+import os
 
 from tensorflow import keras
 
 from models import Observation
 
-MODEL_PATH = "model.h5"
+MODEL_PATH = os.getenv('MODEL_PATH')
 
 
 def predict_cryptomajor_delta() -> float:
