@@ -2,76 +2,121 @@ import os
 import fxcmpy
 import pandas
 import time
-from utils import time_convert
-from predict import predict_cryptomajor_delta
+from predict import predict_ltc
 from models import Observation
+from datetime import datetime
 
 PERIOD = 'm1'
 ROWS = 2
+ASSETS = ['BTC/USD', 'BCH/USD', 'ETH/USD', 'LTC/USD', 'XRP/USD', 'EOS/USD', 'XLM/USD']
+# is_active = False
 
-start_time = time.time()
+def get_observation(con):
 
-print('CONNECT TO FXCMPY API ...')
-con = fxcmpy.fxcmpy(config_file=os.getenv('FXCM_CONFIG'), server='demo')
-print(time_convert(time.time() - start_time))
+    # XXX: Get historical data
+    last_interval = pandas.DataFrame()
+    for c in ASSETS:
+        try:
+            print(f'Fetching {c}...')
+            data = con.get_candles(c, period=PERIOD, number=ROWS)
 
-# print('FETCH INSTRUMENTS...')
-# assets = con.get_instruments_for_candles()
-# print(time_convert(time.time() - start_time))
+            last_interval[c] = data['bidopen']
+        except:
+            print(f'Could not fetch {c}')
 
-assets = ['BTC/USD', 'BCH/USD', 'ETH/USD', 'LTC/USD', 'XRP/USD', 'EOS/USD', 'XLM/USD', 'CryptoMajor']
 
-# XXX: Get historical data
-last_interval = pandas.DataFrame()
-for c in assets:
+    print(last_interval)
+
+    observation = Observation(
+        BTC=last_interval['BTC/USD'][1], 
+        BCH=last_interval['BCH/USD'][1], 
+        ETH=last_interval['ETH/USD'][1], 
+        LTC=last_interval['LTC/USD'][1], 
+        XRP=last_interval['XRP/USD'][1], 
+        EOS=last_interval['EOS/USD'][1], 
+        XLM=last_interval['XLM/USD'][1],
+        dBTC=last_interval['BTC/USD'][1] - last_interval['BTC/USD'][0], 
+        dBCH=last_interval['BCH/USD'][1] - last_interval['BCH/USD'][0], 
+        dETH=last_interval['ETH/USD'][1] - last_interval['ETH/USD'][0], 
+        dLTC=last_interval['LTC/USD'][1] - last_interval['LTC/USD'][0], 
+        dXRP=last_interval['XRP/USD'][1] - last_interval['XRP/USD'][0], 
+        dEOS=last_interval['EOS/USD'][1] - last_interval['EOS/USD'][0], 
+        dXLM=last_interval['XLM/USD'][1] - last_interval['XLM/USD'][0],
+        )
+
+    print(f'The observation is: {observation}')
+
+    return observation
+
+def trade_ltc(con, prediction: float, spread:float, is_active:bool):
+
+    print(f'prediciton is of type: {type(prediction)}')
+    print(f'spread is of type: {type(spread)}')
+
+    # TODO: close open position if prediction is corrupt
+
+    if is_active and prediction < 0:
+        print('HERE IN THE IF')
+        con.close_all_for_symbol('LTC/USD')
+        is_active = False
+        print('LTC position closed')
+    elif not is_active and prediction > spread:
+        print('HERE IN THE ELIF')
+        con.create_market_buy_order('LTC/USD', 100)
+        is_active = True
+        print('LTC position opened')
+    else:
+        print(f'Do nothing. Spread: {spread}, prediction: {prediction}')
+
+def get_spread_ltc(con) -> float:
+    offers_df = con.get_offers(kind='dataframe')
+
+    print('DATAFRAME OFFERS')
+    print(offers_df.loc[offers_df['currency'] == 'LTC/USD'])
+
+    spread = offers_df.loc[offers_df['currency'] == 'LTC/USD']['spread'].values[0]
+
+    return float(spread)
+
+def connect_and_trade(is_active:bool):
     try:
-        print(f'Fetching {c}...')
-        data = con.get_candles(c, period=PERIOD, number=ROWS)
+        print('CONNECT TO FXCMPY API ...')
+        con = fxcmpy.fxcmpy(config_file=os.getenv('FXCM_CONFIG'), server='demo')
+        
 
-        last_interval[c] = data['bidopen']
-    except:
-        print(f'Could not fetch {c}')
+        prediction = float(predict_ltc(get_observation(con)))
+        prediction = -1.0 # TODO: REMOVE! only for test purposes
 
-    print(time_convert(time.time() - start_time))
+        print(f'The prediction is: {prediction}')
 
-print(last_interval)
+        spread = get_spread_ltc(con)
 
-observation1 = Observation(BTC=last_interval['BTC/USD'][0], BCH=last_interval['BCH/USD'][0], ETH=last_interval['ETH/USD'][0], LTC=last_interval['LTC/USD'][0], XRP=last_interval['XRP/USD'][0], EOS=last_interval['EOS/USD'][0], XLM=last_interval['XLM/USD'][0], CryptoMajor=1, CryptoMajor_delta=1)
-observation2 = Observation(BTC=last_interval['BTC/USD'][1], BCH=last_interval['BCH/USD'][1], ETH=last_interval['ETH/USD'][1], LTC=last_interval['LTC/USD'][1], XRP=last_interval['XRP/USD'][1], EOS=last_interval['EOS/USD'][1], XLM=last_interval['XLM/USD'][1], CryptoMajor=1, CryptoMajor_delta=1)
+        print(f'The spread is: {spread}')
 
 
-print(observation1)
-print(observation2)
+        trade_ltc(con, prediction, spread, is_active)
 
-print(predict_cryptomajor_delta())
+        con.close()
 
-# XXX: Get account balance
-account_info = con.get_accounts()
-print('The account info')
-print(account_info.T)
+    except Exception as e:
+        print(e)
+        con.close()
 
-balance = account_info['balance'][0]
-print(f'The balance is: {balance}')
 
-equity = account_info['equity'][0]
-print(f'The equity is: {balance}')
 
-# # XXX: Open order
-# order = con.create_market_sell_order('EUR/USD', 100)
+def gold_mule_shit():
+    is_active= False
+    while True:
+        current_second = datetime.now().second
 
-# print('created order')
-# print(order)
+        if (current_second % 20) == 0:
+            try:    
+                connect_and_trade(is_active)
+            except:
+                pass
 
-# print('Open positions')
-# print(con.get_open_positions().T)
+        time.sleep(0.1)
+            
 
-# # XXX: Close order
-# order = con.close_all_for_symbol('EUR/USD')
+gold_mule_shit()
 
-# print('closed order')
-# print(order)
-
-# print('Open positions')
-# print(con.get_open_positions().T)
-
-con.close()

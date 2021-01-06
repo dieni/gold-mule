@@ -12,8 +12,13 @@ class Observation:
     XRP: float = attr.ib()
     EOS: float = attr.ib()
     XLM: float = attr.ib()
-    CryptoMajor: float = attr.ib()
-    CryptoMajor_delta: float = attr.ib()
+    dBTC: float = attr.ib()
+    dBCH: float = attr.ib()
+    dETH: float = attr.ib()
+    dLTC: float = attr.ib()
+    dXRP: float = attr.ib()
+    dEOS: float = attr.ib()
+    dXLM: float = attr.ib()
 
     def as_tensor(self):
         return np.array([[self.BTC,
@@ -23,5 +28,10 @@ class Observation:
                         self.XRP,
                         self.EOS,
                         self.XLM,
-                        self.CryptoMajor,
-                        self.CryptoMajor_delta]])
+                        self.dBTC,
+                        self.dBCH,
+                        self.dETH,
+                        self.dLTC,
+                        self.dXRP,
+                        self.dEOS,
+                        self.dXLM,]])

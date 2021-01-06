@@ -8,3 +8,7 @@ For the authentication to the services of FXCM copy the *fxcm-template.cfg* and 
 The service can be started using docker compose:
 
 docker-compose up -d
+
+docker exec -it gold-mule bash
+
+python src/prototype_one.py
