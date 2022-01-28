@@ -83,7 +83,6 @@ def connect_and_trade(is_active:bool):
         print('CONNECT TO FXCMPY API ...')
         con = fxcmpy.fxcmpy(config_file=os.getenv('FXCM_CONFIG'), server='demo')
         
-
         prediction = float(predict_ltc(get_observation(con)))
         prediction = -1.0 # TODO: REMOVE! only for test purposes
 

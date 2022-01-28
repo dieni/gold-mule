@@ -1,7 +1,7 @@
 FROM tensorflow/tensorflow:2.4.0
 
 COPY ./requirements.txt /home/requirements.txt
-
+RUN python -m pip install --upgrade pip
 # RUN apt-get update && apt-get upgrade -y
 # RUN apk update && apk upgrade
 
